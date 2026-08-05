@@ -1722,6 +1722,9 @@ fi
 - Update to stable kernel patch v6.18.44
 - Sync RPi patch to git revision: 89586905b8603e545cce9089a81f5f35d65bc998
 
+* Tue Aug 04 2026 Damian Wrobel <dwrobel@ertelnet.rybnik.pl> - 6.18.42-2.rpi
+- Fix for >=f45
+
 * Mon Aug 3 2026 Manuel Fombuena <mfombuena@innovara.tech> - 6.18.42-1.rpi
 - Update to stable kernel patch v6.18.42
 - Sync RPi patch to git revision: 3e4afe46075609841950d970bd23efddc1c30fd2
