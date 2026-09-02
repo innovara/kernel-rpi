@@ -277,6 +277,7 @@ BuildRequires: binutils
 BuildRequires: bison
 BuildRequires: bzip2
 BuildRequires: diffutils
+BuildRequires: dwarves
 BuildRequires: elfutils-libelf-devel
 BuildRequires: findutils
 BuildRequires: flex
@@ -1071,7 +1072,11 @@ BuildKernel() {
     mkdir -p %{buildroot}/lib/modules/$KernelVer
     # Override $(mod-fw) because we don't want it to install any firmware
     # we'll get it from the linux-firmware package and we don't want conflicts
+%if %{with_debuginfo}
     %{make} ARCH=$Arch INSTALL_MOD_PATH=%{buildroot} modules_install KERNELRELEASE=$KernelVer mod-fw=
+%else
+    %{make} ARCH=$Arch INSTALL_MOD_PATH=%{buildroot} INSTALL_MOD_STRIP=1 modules_install KERNELRELEASE=$KernelVer mod-fw=
+%endif
 
     # And save the headers/makefiles etc for building modules against
     #
