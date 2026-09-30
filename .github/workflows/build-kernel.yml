@@ -25,7 +25,7 @@ jobs:
     outputs:
       skip: ${{ steps.check.outputs.skip }}
       version_changed: ${{ steps.check.outputs.version_changed }}
-      kernel_version: ${{ steps.versions.outputs.kernel_version }}
+      kernel_version: ${{ steps.check.outputs.kernel_version }}
       rpi_version: ${{ steps.versions.outputs.rpi_version }}
       rpi_patchlevel: ${{ steps.versions.outputs.rpi_patchlevel }}
       rpi_sublevel: ${{ steps.versions.outputs.rpi_sublevel }}
@@ -67,6 +67,19 @@ jobs:
         id: check
         run: |
           SPEC_SUBLEVEL=$(grep '^%define stable_update' kernel.spec | awk '{print $3}')
+          TREE_VERSION="${{ steps.versions.outputs.kernel_version }}"
+
+          if [ "${{ github.event.inputs.target }}" = "stable" ]; then
+            # Promotion: build the spec exactly as committed by the testing run,
+            # regardless of any newer upstream version that appeared since.
+            echo "Stable promotion. Building spec as committed (SUBLEVEL=${SPEC_SUBLEVEL})."
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "version_changed=false" >> $GITHUB_OUTPUT
+            echo "kernel_version=${{ steps.versions.outputs.rpi_version }}.${{ steps.versions.outputs.rpi_patchlevel }}.${SPEC_SUBLEVEL}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "kernel_version=${TREE_VERSION}" >> $GITHUB_OUTPUT
 
           if [ "$SPEC_SUBLEVEL" != "${{ steps.versions.outputs.rpi_sublevel }}" ]; then
             echo "New stable version detected: $SPEC_SUBLEVEL -> ${{ steps.versions.outputs.rpi_sublevel }}. Proceeding."
@@ -283,6 +296,22 @@ jobs:
             copr-cli regenerate-repos ${{ vars.COPR_USERNAME }}/${{ vars.COPR_REPO_TESTING }}
           fi
 
+  promote:
+    needs: [check, monitor]
+    if: needs.monitor.result == 'success' && github.event.inputs.target != 'stable'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Queue stable build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh workflow run build-kernel.yml \
+            --ref ${{ github.ref_name }} \
+            -f target=stable
+
   notify:
     needs: [check, monitor]
     if: always() && needs.monitor.result == 'success'
@@ -298,16 +327,16 @@ jobs:
         run: |
           VERSION="${{ needs.check.outputs.kernel_version }}"
           gh issue create \
-            --title "Kernel v${VERSION} built in kernel-rpi-testing - ready for testing" \
+            --title "Kernel v${VERSION} built in kernel-rpi-testing - promoting to stable" \
             --body "$(cat <<EOF
-          ## Kernel v${VERSION} is ready for testing
+          ## Kernel v${VERSION} built in testing
 
           A new kernel version has been detected and successfully built in **kernel-rpi-testing**.
 
           **Version:** v${VERSION}
           **RPi git commit:** ${{ needs.check.outputs.rpi_git_full }}
 
-          Once tested, promote by running the workflow with \`target=stable\` and \`force_build=true\`. This issue will be closed automatically.
+          A stable build has been queued automatically. This issue will be closed when it succeeds.
           EOF
           )"
 
