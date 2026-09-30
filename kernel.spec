@@ -71,7 +71,7 @@
 # For non-released -rc kernels, this will be appended after the rcX and
 # gitX tags, so a 3 here would become part of release "0.rcX.gitX.3"
 #
-%global baserelease 1
+%global baserelease 2
 
 # RaspberryPi foundation git snapshot (short)
 %global rpi_gitshort 1e807154d
@@ -1693,6 +1693,13 @@ fi
 
 
 %changelog
+* Wed Sep 30 2026 Manuel Fombuena <mfombuena@innovara.tech> - 6.18.54-2.rpi
+- Cherry-pick upstream (dwrobel/kernel) changes by Ivan Mironov:
+  - Enable CONFIG_DEBUG_INFO_BTF to support systemd's RestrictFileSystems=
+  - Do not overwrite auto.conf with contents of .config
+  - Build and install scripts/sign-file
+  - Make kernel-devel provide kernel-devel-matched
+
 * Wed Sep 30 2026 Manuel Fombuena <mfombuena@innovara.tech> - 6.18.54-1.rpi
 - Update to stable kernel patch v6.18.54
 - Sync RPi patch to git revision: 1e807154dbf9733995f5337e74602d3f82544c6e
