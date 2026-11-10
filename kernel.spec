@@ -393,6 +393,9 @@ Patch100: bcm270x-linux-rpi-6.%{base_sublevel}.y-%{rpi_gitshort}.patch.xz
 
 ## Patches for both builds (bcm270x & bcm283x)
 Patch140: 0001-Revert-Use-kernel-command-line-to-disable-memory-cgr.patch
+# Fix tools build against kernel-headers >= 7.x (arm64 UAPI uses __u128)
+# Upstream: 10a47fb67340 ("tools: linux/types.h: Add 128-bit integer types for arm64 UAPI structures")
+Patch141: 0001-tools-linux-types.h-Add-128-bit-integer-types-for-arm64-UAPI.patch
 
 # Custom bootup logo
 Patch200: bootup-logo.patch
@@ -1696,6 +1699,7 @@ fi
 * Tue Nov 10 2026 Manuel Fombuena <mfombuena@innovara.tech> - 6.18.62-1.rpi
 - Update to stable kernel patch v6.18.62
 - Sync RPi patch to git revision: ef71464298cd2dd89f6d190c08e812296240281e
+- Backport upstream 10a47fb67340 to fix tools build with kernel-headers 7.x on aarch64
 
 * Tue Nov 3 2026 Manuel Fombuena <mfombuena@innovara.tech> - 6.18.60-1.rpi
 - Update to stable kernel patch v6.18.60
